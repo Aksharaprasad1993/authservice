@@ -4,29 +4,29 @@ import java.util.List;
 
 import javax.validation.Valid;
 
-import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
 @Component
 public interface UserService {
 
-    public List<User> retrieveAllUsers();
+    List<User> retrieveAllUsers();
 
-    public User findOne(String username);
+    User findOne(String username);
 
-    public User saveValues(@Valid User user) throws Exception;
+    void saveValues(@Valid User user) throws Exception;
 
-    public HttpStatus validateUser(@Valid User user) throws Exception;
+    ResponseEntity<String> validateUser(@Valid User user) throws Exception;
 
-    public ResponseUser findOneResponse(String username);
+    ResponseUser findOneResponse(String username);
 
-    public String encodePassword(String password);
+    ResponseUser userWithOutPassword(User user);
 
-    public ResponseUser userWithOutPassword(User user);
+    List<ResponseUser> retrieveAllUsersWithoutPassword();
 
-    public List<ResponseUser> retrieveAllUsersWithoutPassword();
-
-	public User findByUsername(String userName);
+	User findByUsername(String userName);
+	
+	boolean isValidPassword(String password);
 
 }
 
