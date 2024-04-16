@@ -30,5 +30,7 @@ public interface UserService {
 
 	ResponseEntity<String> updatePassword(RequestUser requestUser);
 
+	ResponseEntity<String> deleteUser(String username);
+
 }
 

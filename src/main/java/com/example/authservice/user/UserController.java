@@ -7,7 +7,9 @@ import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -63,5 +65,11 @@ public class UserController {
 		return status;
 		
 	}
+	
+    @DeleteMapping(UserAuthenticationConstants.DELETE_USER)
+    public ResponseEntity<String> deleteUser(@RequestParam("username") String username) {
+    	ResponseEntity<String> status = service.deleteUser(username);
+        return status;
+    }
 
 }
