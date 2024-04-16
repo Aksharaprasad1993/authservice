@@ -23,12 +23,13 @@ public class CustomizedResponseEntityExceptionHandler extends ResponseEntityExce
 	}
 
 	@ExceptionHandler(AuthorizationFailureException.class)
-	public final ResponseEntity<Object> handleAuthorizationException(AuthorizationFailureException ex,
-			WebRequest request) {
-		ExceptionResponse exceptionResponse = new ExceptionResponse(new Date(), ex.getMessage(),
-				request.getDescription(false));
-		return new ResponseEntity<Object>(exceptionResponse, HttpStatus.UNAUTHORIZED);
-	}
+	public final ResponseEntity<Object> handleAuthorizationException(AuthorizationFailureException ex) {
+        ErrorResponse errorResponse = new ErrorResponse(
+                LocalDateTime.now(),
+                ex.getMessage()
+            );
+            return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
+        }
 	
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleCustomException(UserNotFoundException ex) {

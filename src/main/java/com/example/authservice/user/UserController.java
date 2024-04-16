@@ -6,6 +6,7 @@ import java.util.List;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -38,13 +39,10 @@ public class UserController {
 	}
 
 	@PostMapping(UserAuthenticationConstants.CREATE_USER)
-	public ResponseEntity<Object> createUser(@Valid @RequestBody User user) throws Exception {
-		
-		service.saveValues(user);
-		URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(user.getUsername())
-				.toUri();
+	public ResponseEntity<String> createUser(@Valid @RequestBody User user) throws Exception {
 
-		return ResponseEntity.created(location).build();
+		service.saveValues(user);
+		return ResponseEntity.status(HttpStatus.CREATED).body(UserAuthenticationConstants.USER_REGISTERED);
 
 	}
 
@@ -56,20 +54,20 @@ public class UserController {
 		return status;
 
 	}
-	
+
 	@PostMapping(UserAuthenticationConstants.UPDATE_PASSWORD)
-	public ResponseEntity<String> updatePassword(@RequestBody RequestUser requestUser ) throws Exception {
-		
+	public ResponseEntity<String> updatePassword(@RequestBody RequestUser requestUser) throws Exception {
+
 		ResponseEntity<String> status = service.updatePassword(requestUser);
-		
+
 		return status;
-		
+
 	}
-	
-    @DeleteMapping(UserAuthenticationConstants.DELETE_USER)
-    public ResponseEntity<String> deleteUser(@RequestParam("username") String username) {
-    	ResponseEntity<String> status = service.deleteUser(username);
-        return status;
-    }
+
+	@DeleteMapping(UserAuthenticationConstants.DELETE_USER)
+	public ResponseEntity<String> deleteUser(@RequestParam("username") String username) {
+		ResponseEntity<String> status = service.deleteUser(username);
+		return status;
+	}
 
 }

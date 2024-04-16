@@ -9,7 +9,18 @@ public class ResponseUser {
     private String lastname;
     private LocalDate dob;
 
-    public String getName() {
+    public ResponseUser(String username, String name, String lastname, LocalDate dob) {
+		super();
+		this.username = username;
+		this.name = name;
+		this.lastname = lastname;
+		this.dob = dob;
+	}
+
+	public ResponseUser() {
+	}
+
+	public String getName() {
         return name;
     }
 

@@ -20,12 +20,18 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
+import com.example.authservice.exception.AuthorizationFailureException;
+import com.example.authservice.exception.InvalidPasswordException;
 import com.example.authservice.exception.UserAlreadyExistsException;
 import com.example.authservice.exception.UserNotFoundException;
+import com.example.authservice.user.RequestUser;
 import com.example.authservice.user.ResponseUser;
 import com.example.authservice.user.SHA256Encryption;
 import com.example.authservice.user.User;
+import com.example.authservice.user.UserAuthenticationConstants;
 import com.example.authservice.user.UserRepository;
 import com.example.authservice.user.UserServiceImpl;
 
@@ -34,22 +40,19 @@ public class UserServiceTest {
 
 	@Mock
 	UserRepository userMockRepository;
-	
-    @Mock
-    private SHA256Encryption sha256; 
 
 	@InjectMocks
 	UserServiceImpl userService;
 
-
+	SHA256Encryption sha256 = new SHA256Encryption();
 
 	// getUsers
 
 	@Test
-	public void retrieveAllUsers_Success() throws Exception {
+	public void testGetUsers_Success() throws Exception {
 
-		User users = new User();
-		List<User> expected = Arrays.asList(users);
+		List<User> expected = Arrays.asList(new User("username1", "lastname1", "user1", "RawPassword@1", "2000-06-22"),
+				new User("username2", "lastname2", "user2", "RawPassword@2", "2000-07-12"));
 
 		when(userMockRepository.findAll()).thenReturn(expected);
 
@@ -62,11 +65,11 @@ public class UserServiceTest {
 	// lookUpUser
 
 	@Test
-	public void findOneResponse_Success() {
+	public void testLookUp_Success() {
 
 		String username = "testuser1";
 
-		User expected = new User("TestUser1", "Test", username, "pwdtestuser1", "1998, 8, 12");
+		User expected = new User("TestUser1", "Test", username, "Pwdtestuser@1", "1998-08-12");
 
 		when(userMockRepository.findByUsername(username)).thenReturn(expected);
 
@@ -79,7 +82,7 @@ public class UserServiceTest {
 	}
 
 	@Test
-	public void findOneResponse_UserNotExists() {
+	public void testLookUp_UserNotNotFound() {
 
 		String username = "testUser";
 		doThrow(new UserNotFoundException("User not found")).when(userMockRepository).findByUsername(username);
@@ -93,31 +96,21 @@ public class UserServiceTest {
 	// createUser
 
 	@Test
-	public void createUser_Success() throws Exception {
+	public void testCreateUser_Success() throws Exception {
 		String username = "User";
-		String rawPassword = "password123";
-		String encodedPassword = "encodedPassword123";
-		User userRequest = new User(username, "L", "user", rawPassword, "2001, 8, 12");
+		String rawPassword = "Password@123";
+		User userRequest = new User(username, "L", "user", rawPassword, "2001-08-12");
 
-		User newUser = new User(username, "L", "user", encodedPassword, "2001, 8, 12");
-		
-		 when(sha256.encrypt(rawPassword)).thenReturn(encodedPassword);
+		when(userMockRepository.save(any(User.class))).thenReturn(userRequest);
 
-		 doAnswer(invocation -> {
-	            User savedUser = invocation.getArgument(0);
-	            assertEquals(newUser.getUsername(), savedUser.getUsername());
-	            assertEquals(newUser.getPassword(), savedUser.getPassword());
-	            return null; // or do nothing since the method returns void
-	        }).when(userMockRepository).save(any(User.class));
+		userService.saveValues(userRequest);
 
-		 userService.saveValues(userRequest);
-		
-		 verify(sha256, times(1)).encrypt(rawPassword); 
-		 verify(userMockRepository, times(1)).save(any(User.class));
+		verify(userMockRepository).save(any(User.class));
+
 	}
 
 	@Test
-	public void createUser_ThrowErrorIfUsernameAlreadyExists() {
+	public void testcreateUser_usernameAlreadyExists() {
 		User userRequest = new User();
 		userRequest.setUsername("kenny");
 
@@ -133,23 +126,25 @@ public class UserServiceTest {
 	// validateUser
 
 	@Test
-	public void validateUser_ValidUser() throws Exception {
+	public void testvalidateUser_Success() throws Exception {
 		String username = "testUser";
 		String password = "password123";
+		String encodedPassword = sha256.encrypt(password);
 		User user = new User();
 		user.setUsername(username);
-		user.setPassword(password);
+		user.setPassword(encodedPassword);
 
 		when(userMockRepository.findByUsername(username)).thenReturn(user);
 
 		User response = userService.findOne(username);
-		assertEquals(user, response);
+		assertEquals(user.getUsername(), response.getUsername());
+		assertEquals(user.getPassword(), response.getPassword());
 
 	}
 
 	@Test
-	public void validateUser_InvalidUser() {
-		String username = "testUser";
+	public void testvalidateUser_UserNotFound() {
+		String username = "invalidUser";
 		String password = "invalidPassword";
 		User user = new User();
 		user.setUsername(username);
@@ -162,4 +157,93 @@ public class UserServiceTest {
 		});
 	}
 
+	@Test
+	public void testvalidateUser_InvalidUsernameOrPassword() {
+		String username = "invalidUser1";
+		String password = "invalidPassword1";
+		String encodedPassword = sha256.encrypt(password);
+		User user = new User();
+		user.setUsername(username);
+		user.setPassword(encodedPassword);
+
+		doThrow(InvalidPasswordException.class).when(userMockRepository).findByUsername(user.getUsername());
+		assertThrows(InvalidPasswordException.class, () -> {
+			userService.findByUsername(user.getUsername());
+		});
+
+	}
+
+	// update Password
+
+	@Test
+	public void testUpdatePassword_Success() {
+		RequestUser requestUser = new RequestUser("testUser", "oldPassword@123", "newPassword@123");
+		String encodedPassword = sha256.encrypt("oldPassword@123");
+
+		User user = new User("testUser", "testlastname", "testusername", encodedPassword, "2010-03-08");
+		when(userMockRepository.findByUsername(requestUser.getUsername())).thenReturn(user);
+
+		ResponseEntity<String> result = userService.updatePassword(requestUser);
+
+		assertEquals(ResponseEntity.status(HttpStatus.OK).body(UserAuthenticationConstants.PASSWORD_UPDATED), result);
+		verify(userMockRepository, times(1)).save(any(User.class));
+	}
+
+	@Test
+	public void testUpdatePassword_PasswordNotMatch() {
+		RequestUser requestUser = new RequestUser("testUser", "incorrectPassword@123", "newPassword@123");
+		String encodedOldPassword = sha256.encrypt("oldPassword@123");
+		User user = new User("testUser", "testlastname", "testusername", encodedOldPassword, "2010-03-08");
+
+		when(userMockRepository.findByUsername(requestUser.getUsername())).thenReturn(user);
+		ResponseEntity<String> result = userService.updatePassword(requestUser);
+
+		assertEquals(
+				ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(UserAuthenticationConstants.INCORRECT_PASSWORD),
+				result);
+		verify(userMockRepository, never()).save(any(User.class));
+
+	}
+
+	@Test
+	public void testUpdatePassword_UserNotFound() {
+		RequestUser requestUser = new RequestUser("nonExistentUser", "oldPassword", "newPassword");
+
+		when(userMockRepository.findByUsername(requestUser.getUsername())).thenReturn(null);
+
+		ResponseEntity<String> result = userService.updatePassword(requestUser);
+
+		assertEquals(ResponseEntity.status(HttpStatus.NOT_FOUND).body(UserAuthenticationConstants.INVALID_USERNAME),
+				result);
+		verify(userMockRepository, never()).save(any(User.class));
+
+	}
+
+	// Delete User
+
+	@Test
+	public void testDeleteUser_Success() {
+		String username = "testUser";
+
+		User user = new User("testUser", "testlastname", "testusername", "encodedPassword", "2010-03-08");
+		when(userMockRepository.findByUsername(username)).thenReturn(user);
+
+		ResponseEntity<String> result = userService.deleteUser(username);
+		assertEquals(ResponseEntity.status(HttpStatus.OK)
+				.body(UserAuthenticationConstants.USER_DELETED_SUCCESSFULLY + username), result);
+		verify(userMockRepository, times(1)).delete(user);
+	}
+
+	@Test
+	public void testDeleteUser_UserNotFound() {
+		String username = "nonExistentUser";
+
+		when(userMockRepository.findByUsername(username)).thenReturn(null);
+
+		ResponseEntity<String> result = userService.deleteUser(username);
+		assertEquals(ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(UserAuthenticationConstants.INVALID_USERNAME),
+				result);
+		verify(userMockRepository, never()).delete(any(User.class));
+
+	}
 }

@@ -8,6 +8,15 @@ public class RequestUser {
 	private String oldPassword;
 	private String updatedPassword;
 
+
+
+	public RequestUser(String username, String oldPassword, String updatedPassword) {
+		super();
+		this.username = username;
+		this.oldPassword = oldPassword;
+		this.updatedPassword = updatedPassword;
+	}
+
 	public String getUsername() {
 		return username;
 	}

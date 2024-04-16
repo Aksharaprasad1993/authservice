@@ -18,8 +18,7 @@ public class UserServiceImpl implements UserService {
 	@Autowired
 	private UserRepository userRepository;
 
-	@Autowired
-	private SHA256Encryption sha256;
+	SHA256Encryption sha256 = new SHA256Encryption();
 
 	public UserServiceImpl(UserRepository userRepository) {
 		this.userRepository = userRepository;
