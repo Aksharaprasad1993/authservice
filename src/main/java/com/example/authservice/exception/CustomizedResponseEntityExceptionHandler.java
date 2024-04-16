@@ -3,10 +3,8 @@ package com.example.authservice.exception;
 import java.time.LocalDateTime;
 import java.util.Date;
 
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestController;
@@ -53,6 +51,15 @@ public class CustomizedResponseEntityExceptionHandler extends ResponseEntityExce
     
     @ExceptionHandler(InvalidPasswordException.class)
     public ResponseEntity<ErrorResponse> handleCustomException(InvalidPasswordException ex) {
+        ErrorResponse errorResponse = new ErrorResponse(
+            LocalDateTime.now(),
+            ex.getMessage()
+        );
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+    
+    @ExceptionHandler(InvalidDateException.class)
+    public ResponseEntity<ErrorResponse> handleCustomException(InvalidDateException ex) {
         ErrorResponse errorResponse = new ErrorResponse(
             LocalDateTime.now(),
             ex.getMessage()

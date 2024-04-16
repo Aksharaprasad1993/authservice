@@ -28,5 +28,7 @@ public interface UserService {
 	
 	boolean isValidPassword(String password);
 
+	ResponseEntity<String> updatePassword(RequestUser requestUser);
+
 }
 

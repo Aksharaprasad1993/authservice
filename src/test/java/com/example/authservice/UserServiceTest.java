@@ -12,7 +12,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 
@@ -67,7 +66,7 @@ public class UserServiceTest {
 
 		String username = "testuser1";
 
-		User expected = new User("TestUser1", "Test", username, "pwdtestuser1", LocalDate.of(1998, 8, 12));
+		User expected = new User("TestUser1", "Test", username, "pwdtestuser1", "1998, 8, 12");
 
 		when(userMockRepository.findByUsername(username)).thenReturn(expected);
 
@@ -98,9 +97,9 @@ public class UserServiceTest {
 		String username = "User";
 		String rawPassword = "password123";
 		String encodedPassword = "encodedPassword123";
-		User userRequest = new User(username, "L", "user", rawPassword, LocalDate.of(2001, 8, 12));
+		User userRequest = new User(username, "L", "user", rawPassword, "2001, 8, 12");
 
-		User newUser = new User(username, "L", "user", encodedPassword, LocalDate.of(2001, 8, 12));
+		User newUser = new User(username, "L", "user", encodedPassword, "2001, 8, 12");
 		
 		 when(sha256.encrypt(rawPassword)).thenReturn(encodedPassword);
 

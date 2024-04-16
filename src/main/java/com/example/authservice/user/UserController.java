@@ -54,5 +54,14 @@ public class UserController {
 		return status;
 
 	}
+	
+	@PostMapping(UserAuthenticationConstants.UPDATE_PASSWORD)
+	public ResponseEntity<String> updatePassword(@RequestBody RequestUser requestUser ) throws Exception {
+		
+		ResponseEntity<String> status = service.updatePassword(requestUser);
+		
+		return status;
+		
+	}
 
 }

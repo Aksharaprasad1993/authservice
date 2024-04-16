@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import com.example.authservice.exception.InvalidDateException;
 import com.example.authservice.exception.InvalidPasswordException;
 import com.example.authservice.exception.UserAlreadyExistsException;
 import com.example.authservice.exception.UserNotFoundException;
@@ -66,13 +67,15 @@ public class UserServiceImpl implements UserService {
 		User existingRecord = findOne(user.getUsername());
 		String encodedPassword = null;
 		if (null == existingRecord) {
-			if(isValidPassword(user.getPassword())) {
-			encodedPassword = sha256.encrypt(user.getPassword());
-			user.setPassword(encodedPassword);
-			userRepository.save(user);
+			if (null == user.getDob()) {
+				throw new InvalidDateException(UserAuthenticationConstants.INVALID_DATE);
 			}
-			else {
-			throw new InvalidPasswordException(UserAuthenticationConstants.INVALID_PASSWORD);
+			if (isValidPassword(user.getPassword())) {
+				encodedPassword = sha256.encrypt(user.getPassword());
+				user.setPassword(encodedPassword);
+				userRepository.save(user);
+			} else {
+				throw new InvalidPasswordException(UserAuthenticationConstants.INVALID_PASSWORD);
 			}
 		} else {
 			throw new UserAlreadyExistsException(UserAuthenticationConstants.USER_ALREADY_EXISTS);
@@ -90,12 +93,12 @@ public class UserServiceImpl implements UserService {
 		} else if (null != existingRecord && null != existingRecord.getUsername()
 				&& null != existingRecord.getPassword()
 				&& !encodePassword.equalsIgnoreCase(existingRecord.getPassword())) {
-			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(UserAuthenticationConstants.INVALID_PASSWORD_USERNAME);
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+					.body(UserAuthenticationConstants.INVALID_PASSWORD_USERNAME);
 		} else {
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(UserAuthenticationConstants.INVALID_USERNAME);
 		}
 	}
-
 
 	@Override
 	public ResponseUser userWithOutPassword(User user) {
@@ -113,16 +116,42 @@ public class UserServiceImpl implements UserService {
 		User existingUser = userRepository.findByUsername(userName);
 		return existingUser;
 	}
-	
+
 	@Override
-    public boolean isValidPassword(String password) {
-        return password != null &&
-               password.length() >= UserAuthenticationConstants.PASSWORD_MIN_LENGTH && 
-               password.matches(UserAuthenticationConstants.PASSWORD_REGEX_UPPERCASE) && 
-               password.matches(UserAuthenticationConstants.PASSWORD_REGEX_LOWERCASE) && 
-               password.matches(UserAuthenticationConstants.PASSWORD_REGEX_DIGIT) && 
-               password.matches(UserAuthenticationConstants.PASSWORD_REGEX_SPECIAL_CHAR); 
-    }
+	public boolean isValidPassword(String password) {
+		return password != null && password.length() >= UserAuthenticationConstants.PASSWORD_MIN_LENGTH
+				&& password.matches(UserAuthenticationConstants.PASSWORD_REGEX_UPPERCASE)
+				&& password.matches(UserAuthenticationConstants.PASSWORD_REGEX_LOWERCASE)
+				&& password.matches(UserAuthenticationConstants.PASSWORD_REGEX_DIGIT)
+				&& password.matches(UserAuthenticationConstants.PASSWORD_REGEX_SPECIAL_CHAR);
+	}
 
+	@Override
+	public ResponseEntity<String> updatePassword(RequestUser requestUser) {
+		String encodedPassword = null;
+		String encodedNewPassword = null;
+		User existingRecord = findOne(requestUser.getUsername());
+		encodedPassword = sha256.encrypt(requestUser.getOldPassword());
+		encodedNewPassword = sha256.encrypt(requestUser.getUpdatedPassword());
 
+		if(null == existingRecord){
+		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(UserAuthenticationConstants.INVALID_USERNAME);
+		}
+		else if (null != existingRecord && null != existingRecord.getUsername() && null != existingRecord.getPassword()
+				&& existingRecord.getPassword().equalsIgnoreCase(encodedPassword)
+				&& !(isValidPassword(requestUser.getUpdatedPassword()))) {
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(UserAuthenticationConstants.INVALID_PASSWORD);
+
+			
+		} else if (null != existingRecord && null != existingRecord.getUsername()
+				&& null != existingRecord.getPassword()
+				&& !existingRecord.getPassword().equalsIgnoreCase(encodedPassword)) {
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(UserAuthenticationConstants.INCORRECT_PASSWORD);
+		} else {
+			existingRecord.setPassword(encodedNewPassword);
+			userRepository.save(existingRecord);
+			return ResponseEntity.status(HttpStatus.OK).body(UserAuthenticationConstants.PASSWORD_UPDATED);
+		}
+
+	}
 }
