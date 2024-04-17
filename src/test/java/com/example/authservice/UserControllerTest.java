@@ -228,11 +228,15 @@ public class UserControllerTest {
 	@Test
 	public void testDeleteUser_UserExists() {
 		String username = "existingUser";
+		String password = "Password";
+		User user = new User();
+		user.setUsername(username);
+		user.setPassword(password);
 		ResponseEntity<String> responseEntity = ResponseEntity
 				.ok(UserAuthenticationConstants.USER_DELETED_SUCCESSFULLY + username);
-		when(mockservice.deleteUser(username)).thenReturn(responseEntity);
+		when(mockservice.deleteUser(user)).thenReturn(responseEntity);
 
-		ResponseEntity<String> response = controllertest.deleteUser(username);
+		ResponseEntity<String> response = controllertest.deleteUser(user);
 
 		assertEquals(HttpStatus.OK, response.getStatusCode());
 		assertEquals(UserAuthenticationConstants.USER_DELETED_SUCCESSFULLY + username, response.getBody());
@@ -241,11 +245,16 @@ public class UserControllerTest {
 	@Test
 	public void testDeleteUser_UserNotFound() {
 		String username = "nonExistentUser";
+		String password = "Password";
+		User user = new User();
+		user.setUsername(username);
+		user.setPassword(password);
+		
 		ResponseEntity<String> responseEntity = ResponseEntity.status(HttpStatus.UNAUTHORIZED)
 				.body(UserAuthenticationConstants.INVALID_USERNAME);
-		when(mockservice.deleteUser(username)).thenReturn(responseEntity);
+		when(mockservice.deleteUser(user)).thenReturn(responseEntity);
 
-		ResponseEntity<String> response = controllertest.deleteUser(username);
+		ResponseEntity<String> response = controllertest.deleteUser(user);
 
 		assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
 		assertEquals(UserAuthenticationConstants.INVALID_USERNAME, response.getBody());

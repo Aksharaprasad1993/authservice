@@ -146,25 +146,14 @@ public class UserServiceImpl implements UserService {
 			}
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(UserAuthenticationConstants.INCORRECT_PASSWORD);
 		} else {
-			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(UserAuthenticationConstants.INVALID_USERNAME);
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(UserAuthenticationConstants.INVALID_USERNAME);
 		}
 
 	}
 
-	@Override
-	public ResponseEntity<String> deleteUser(String username) {
-		User existingRecord = findOne(username);
-		if (null != existingRecord) {
-			userRepository.delete(existingRecord);
-			return ResponseEntity.status(HttpStatus.OK)
-					.body(UserAuthenticationConstants.USER_DELETED_SUCCESSFULLY + username);
-		} else {
-			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(UserAuthenticationConstants.INVALID_USERNAME);
-		}
-	}
 
 	@Override
-	public ResponseEntity<String> deleteUserNew(@Valid User user) {
+	public ResponseEntity<String> deleteUser(@Valid User user) {
 		User existingRecord = findOne(user.getUsername());
 		if (null != existingRecord) {
 			String encodedPassword = null;

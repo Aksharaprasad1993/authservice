@@ -223,24 +223,34 @@ public class UserServiceTest {
 
 	@Test
 	public void testDeleteUser_Success() {
-		String username = "testUser";
+		
+		String username = "existingUser";
+		String password = "Password";
+		String encodedPassword = sha256.encrypt(password);
+		User user = new User();
+		user.setUsername(username);
+		user.setPassword(password);
 
-		User user = new User("testUser", "testlastname", "testusername", "encodedPassword", "2010-03-08");
-		when(userMockRepository.findByUsername(username)).thenReturn(user);
+		User responseuser = new User("testusername", "testlastname", username, encodedPassword, "2010-03-08");
+		when(userMockRepository.findByUsername(username)).thenReturn(responseuser);
 
-		ResponseEntity<String> result = userService.deleteUser(username);
+		ResponseEntity<String> result = userService.deleteUser(user);
 		assertEquals(ResponseEntity.status(HttpStatus.OK)
 				.body(UserAuthenticationConstants.USER_DELETED_SUCCESSFULLY + username), result);
-		verify(userMockRepository, times(1)).delete(user);
+		verify(userMockRepository, times(1)).delete(responseuser);
 	}
 
 	@Test
 	public void testDeleteUser_UserNotFound() {
 		String username = "nonExistentUser";
+		String password = "Password";
+		String encodedPassword = sha256.encrypt(password);
+		User user = new User();
+		user.setUsername(username);
+		user.setPassword(encodedPassword);
+		when(userMockRepository.findByUsername("nonExistentUser")).thenReturn(null);
 
-		when(userMockRepository.findByUsername(username)).thenReturn(null);
-
-		ResponseEntity<String> result = userService.deleteUser(username);
+		ResponseEntity<String> result = userService.deleteUser(user);
 		assertEquals(ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(UserAuthenticationConstants.INVALID_USERNAME),
 				result);
 		verify(userMockRepository, never()).delete(any(User.class));

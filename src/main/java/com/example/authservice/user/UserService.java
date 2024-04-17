@@ -30,9 +30,9 @@ public interface UserService {
 
 	ResponseEntity<String> updatePassword(RequestUser requestUser);
 
-	ResponseEntity<String> deleteUser(String username);
+	//ResponseEntity<String> deleteUser(String username);
 
-	ResponseEntity<String> deleteUserNew(@Valid User user);
+	ResponseEntity<String> deleteUser(@Valid User user);
 
 }
 

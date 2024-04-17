@@ -64,15 +64,16 @@ public class UserController {
 
 	}
 
-	@DeleteMapping(UserAuthenticationConstants.DELETE_USER)
-	public ResponseEntity<String> deleteUser(@RequestParam("username") String username) {
-		ResponseEntity<String> status = service.deleteUser(username);
-		return status;
-	}
+	/*
+	 * @DeleteMapping(UserAuthenticationConstants.DELETE_USER) public
+	 * ResponseEntity<String> deleteUser(@RequestParam("username") String username)
+	 * { ResponseEntity<String> status = service.deleteUser(username); return
+	 * status; }
+	 */
 	
-	@DeleteMapping(UserAuthenticationConstants.DELETE_USER_NEW)
-	public ResponseEntity<String> deleteUserNew(@Valid @RequestBody User user) {
-		ResponseEntity<String> status = service.deleteUserNew(user);
+	@DeleteMapping(UserAuthenticationConstants.DELETE_USER)
+	public ResponseEntity<String> deleteUser(@Valid @RequestBody User user) {
+		ResponseEntity<String> status = service.deleteUser(user);
 		return status;
 	}
 
