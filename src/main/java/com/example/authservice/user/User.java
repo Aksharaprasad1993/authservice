@@ -78,4 +78,12 @@ public class User {
 				+ ", dob=" + dob + "]";
 	}
 
+	public boolean isUsernameExists() {
+		return null != username;
+	}
+
+	public boolean validatePassword(String encodedPassword) {
+		return null != password && password.equalsIgnoreCase(encodedPassword);
+	}
+	
 }

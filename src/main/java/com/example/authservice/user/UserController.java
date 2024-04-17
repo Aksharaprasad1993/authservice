@@ -69,5 +69,11 @@ public class UserController {
 		ResponseEntity<String> status = service.deleteUser(username);
 		return status;
 	}
+	
+	@DeleteMapping(UserAuthenticationConstants.DELETE_USER_NEW)
+	public ResponseEntity<String> deleteUserNew(@Valid @RequestBody User user) {
+		ResponseEntity<String> status = service.deleteUserNew(user);
+		return status;
+	}
 
 }

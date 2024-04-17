@@ -32,5 +32,7 @@ public interface UserService {
 
 	ResponseEntity<String> deleteUser(String username);
 
+	ResponseEntity<String> deleteUserNew(@Valid User user);
+
 }
 

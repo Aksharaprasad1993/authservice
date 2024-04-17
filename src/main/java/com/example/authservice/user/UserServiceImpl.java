@@ -2,6 +2,8 @@ package com.example.authservice.user;
 
 import java.util.List;
 
+import javax.validation.Valid;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -86,17 +88,15 @@ public class UserServiceImpl implements UserService {
 	public ResponseEntity<String> validateUser(User user) throws Exception {
 		User existingRecord = findOne(user.getUsername());
 		String encodePassword = sha256.encrypt(user.getPassword());
-		if (null != existingRecord && null != existingRecord.getUsername() && null != existingRecord.getPassword()
-				&& encodePassword.equalsIgnoreCase(existingRecord.getPassword())) {
+		if (existingRecord == null) {
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(UserAuthenticationConstants.INVALID_USERNAME);
+		} else if (existingRecord.isUsernameExists() && existingRecord.validatePassword(encodePassword)) {
 			return ResponseEntity.status(HttpStatus.OK).body(UserAuthenticationConstants.VALID_USER);
-		} else if (null != existingRecord && null != existingRecord.getUsername()
-				&& null != existingRecord.getPassword()
-				&& !encodePassword.equalsIgnoreCase(existingRecord.getPassword())) {
+		} else {
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
 					.body(UserAuthenticationConstants.INVALID_PASSWORD_USERNAME);
-		} else {
-			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(UserAuthenticationConstants.INVALID_USERNAME);
 		}
+
 	}
 
 	@Override
@@ -127,29 +127,26 @@ public class UserServiceImpl implements UserService {
 
 	@Override
 	public ResponseEntity<String> updatePassword(RequestUser requestUser) {
-		String encodedPassword = null;
-		String encodedNewPassword = null;
+
 		User existingRecord = findOne(requestUser.getUsername());
-		encodedPassword = sha256.encrypt(requestUser.getOldPassword());
-		encodedNewPassword = sha256.encrypt(requestUser.getUpdatedPassword());
-
-		if(null == existingRecord){
-		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(UserAuthenticationConstants.INVALID_USERNAME);
-		}
-		else if (null != existingRecord && null != existingRecord.getUsername() && null != existingRecord.getPassword()
-				&& existingRecord.getPassword().equalsIgnoreCase(encodedPassword)
-				&& !(isValidPassword(requestUser.getUpdatedPassword()))) {
-				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(UserAuthenticationConstants.INVALID_PASSWORD);
-
-			
-		} else if (null != existingRecord && null != existingRecord.getUsername()
-				&& null != existingRecord.getPassword()
-				&& !existingRecord.getPassword().equalsIgnoreCase(encodedPassword)) {
+		if (null != existingRecord) {
+			String encodedPassword = null;
+			encodedPassword = sha256.encrypt(requestUser.getOldPassword());
+			if (existingRecord.isUsernameExists() && existingRecord.validatePassword(encodedPassword)) {
+				String newPassword = requestUser.getUpdatedPassword();
+				if ((isValidPassword(newPassword))) {
+					String encodedNewPassword = sha256.encrypt(newPassword);
+					existingRecord.setPassword(encodedNewPassword);
+					userRepository.save(existingRecord);
+					return ResponseEntity.status(HttpStatus.OK).body(UserAuthenticationConstants.PASSWORD_UPDATED);
+				} else {
+					return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+							.body(UserAuthenticationConstants.INVALID_PASSWORD);
+				}
+			}
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(UserAuthenticationConstants.INCORRECT_PASSWORD);
 		} else {
-			existingRecord.setPassword(encodedNewPassword);
-			userRepository.save(existingRecord);
-			return ResponseEntity.status(HttpStatus.OK).body(UserAuthenticationConstants.PASSWORD_UPDATED);
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(UserAuthenticationConstants.INVALID_USERNAME);
 		}
 
 	}
@@ -157,11 +154,29 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public ResponseEntity<String> deleteUser(String username) {
 		User existingRecord = findOne(username);
-    if (null != existingRecord) {
-        userRepository.delete(existingRecord);
-        return ResponseEntity.status(HttpStatus.OK).body(UserAuthenticationConstants.USER_DELETED_SUCCESSFULLY+username);
-    } else {
-    	return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(UserAuthenticationConstants.INVALID_USERNAME);
-    }
+		if (null != existingRecord) {
+			userRepository.delete(existingRecord);
+			return ResponseEntity.status(HttpStatus.OK)
+					.body(UserAuthenticationConstants.USER_DELETED_SUCCESSFULLY + username);
+		} else {
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(UserAuthenticationConstants.INVALID_USERNAME);
+		}
+	}
+
+	@Override
+	public ResponseEntity<String> deleteUserNew(@Valid User user) {
+		User existingRecord = findOne(user.getUsername());
+		if (null != existingRecord) {
+			String encodedPassword = null;
+			encodedPassword = sha256.encrypt(user.getPassword());
+			if (existingRecord.isUsernameExists() && existingRecord.validatePassword(encodedPassword)) {
+				userRepository.delete(existingRecord);
+				return ResponseEntity.status(HttpStatus.OK)
+						.body(UserAuthenticationConstants.USER_DELETED_SUCCESSFULLY + user.getUsername());
+			}
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(UserAuthenticationConstants.INCORRECT_PASSWORD);
+		} else {
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(UserAuthenticationConstants.INVALID_USERNAME);
+		}
 	}
 }

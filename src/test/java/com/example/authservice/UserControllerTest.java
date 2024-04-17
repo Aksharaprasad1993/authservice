@@ -5,14 +5,12 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,7 +25,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import com.example.authservice.exception.AuthorizationFailureException;
-import com.example.authservice.exception.InvalidPasswordException;
 import com.example.authservice.exception.UserAlreadyExistsException;
 import com.example.authservice.exception.UserNotFoundException;
 import com.example.authservice.user.RequestUser;
@@ -37,8 +34,7 @@ import com.example.authservice.user.User;
 import com.example.authservice.user.UserAuthenticationConstants;
 import com.example.authservice.user.UserController;
 import com.example.authservice.user.UserService;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.jayway.jsonpath.JsonPath;
+
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -140,7 +136,6 @@ public class UserControllerTest {
 		String username = "validUser";
 		String password = "validPassword";
 
-		String jsonString = "{\"username\":\"validUser\", \"password\":\"validPassword\"}";
 		User user = new User();
 		user.setUsername(username);
 		user.setPassword(password);
@@ -239,7 +234,6 @@ public class UserControllerTest {
 
 		ResponseEntity<String> response = controllertest.deleteUser(username);
 
-		// Verifying the response
 		assertEquals(HttpStatus.OK, response.getStatusCode());
 		assertEquals(UserAuthenticationConstants.USER_DELETED_SUCCESSFULLY + username, response.getBody());
 	}
