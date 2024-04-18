@@ -3,7 +3,9 @@ package com.example.authservice;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
@@ -12,6 +14,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -59,6 +62,20 @@ public class UserServiceTest {
 		List<ResponseUser> actual = userService.retrieveAllUsersWithoutPassword();
 
 		assertAll(() -> assertNotNull(actual), () -> assertEquals(expected.size(), actual.size()));
+
+	}
+	
+	@Test
+	public void testGetUsers_EmptyList() throws Exception {
+
+		 List<User> result = new ArrayList<User>();
+
+		when(userMockRepository.findAll()).thenReturn(result);
+
+		List<ResponseUser> actual = userService.retrieveAllUsersWithoutPassword();
+		
+
+		assertAll(() -> assertTrue(actual.isEmpty()) , () -> assertEquals(result.size(), actual.size()));
 
 	}
 
@@ -110,7 +127,7 @@ public class UserServiceTest {
 	}
 
 	@Test
-	public void testcreateUser_usernameAlreadyExists() {
+	public void testCreateUser_usernameAlreadyExists() {
 		User userRequest = new User();
 		userRequest.setUsername("kenny");
 
@@ -126,7 +143,7 @@ public class UserServiceTest {
 	// validateUser
 
 	@Test
-	public void testvalidateUser_Success() throws Exception {
+	public void testValidateUser_Success() throws Exception {
 		String username = "testUser";
 		String password = "password123";
 		String encodedPassword = sha256.encrypt(password);
@@ -143,7 +160,7 @@ public class UserServiceTest {
 	}
 
 	@Test
-	public void testvalidateUser_UserNotFound() {
+	public void testValidateUser_UserNotFound() {
 		String username = "invalidUser";
 		String password = "invalidPassword";
 		User user = new User();
@@ -158,7 +175,7 @@ public class UserServiceTest {
 	}
 
 	@Test
-	public void testvalidateUser_InvalidUsernameOrPassword() {
+	public void testValidateUser_InvalidUsernameOrPassword() {
 		String username = "invalidUser1";
 		String password = "invalidPassword1";
 		String encodedPassword = sha256.encrypt(password);

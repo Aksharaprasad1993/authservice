@@ -9,6 +9,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -34,7 +35,7 @@ import com.example.authservice.user.User;
 import com.example.authservice.user.UserAuthenticationConstants;
 import com.example.authservice.user.UserController;
 import com.example.authservice.user.UserService;
-
+import com.mysql.cj.x.protobuf.MysqlxDatatypes.Array;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -70,6 +71,17 @@ public class UserControllerTest {
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON)).andReturn().equals(expected);
 
 	}
+	
+	
+	   @Test
+	    public void getUsers_EmptyList() throws Exception {
+		   List<ResponseUser> result = new ArrayList<ResponseUser>();
+				   when(mockservice.retrieveAllUsersWithoutPassword()).thenReturn(result);
+				
+	        mockMvc.perform(get(UserAuthenticationConstants.GET_USERS))
+	               .andExpect(status().isOk())
+	               .andReturn().equals(result);
+	    }
 
 	// create user
 
@@ -81,7 +93,7 @@ public class UserControllerTest {
 		String encodedPassword = sha256.encrypt(rawPassword);
 		User userRequest = new User(username, "L", "user", rawPassword, "2001-08-12");
 		userRequest.setPassword(encodedPassword);
-		 doNothing().when(mockservice).saveValues(any(User.class)); 
+		doNothing().when(mockservice).saveValues(any(User.class)); 
 
 
 		 ResponseEntity<String> responseEntity = controllertest.createUser(userRequest);
@@ -109,7 +121,7 @@ public class UserControllerTest {
 	// lookUp User
 
 	@Test
-	public void lookUp_Success() throws Exception {
+	public void testLookUp_Success() throws Exception {
 		String username = "testusername";
 		ResponseUser responseUser = new ResponseUser(username, "lastname", "testUser", LocalDate.of(1994, 05, 04));
 		when(mockservice.findOneResponse(username)).thenReturn(responseUser);
@@ -226,7 +238,7 @@ public class UserControllerTest {
 	// delete user
 
 	@Test
-	public void testDeleteUser_UserExists() {
+	public void testDeleteUser_UserExists() throws Exception {
 		String username = "existingUser";
 		String password = "Password";
 		User user = new User();
@@ -243,7 +255,7 @@ public class UserControllerTest {
 	}
 
 	@Test
-	public void testDeleteUser_UserNotFound() {
+	public void testDeleteUser_UserNotFound() throws Exception {
 		String username = "nonExistentUser";
 		String password = "Password";
 		User user = new User();

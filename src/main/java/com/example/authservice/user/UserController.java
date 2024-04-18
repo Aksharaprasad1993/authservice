@@ -1,6 +1,6 @@
 package com.example.authservice.user;
 
-import java.net.URI;
+
 import java.util.List;
 
 import javax.validation.Valid;
@@ -64,15 +64,9 @@ public class UserController {
 
 	}
 
-	/*
-	 * @DeleteMapping(UserAuthenticationConstants.DELETE_USER) public
-	 * ResponseEntity<String> deleteUser(@RequestParam("username") String username)
-	 * { ResponseEntity<String> status = service.deleteUser(username); return
-	 * status; }
-	 */
 	
 	@DeleteMapping(UserAuthenticationConstants.DELETE_USER)
-	public ResponseEntity<String> deleteUser(@Valid @RequestBody User user) {
+	public ResponseEntity<String> deleteUser(@Valid @RequestBody User user) throws Exception {
 		ResponseEntity<String> status = service.deleteUser(user);
 		return status;
 	}
