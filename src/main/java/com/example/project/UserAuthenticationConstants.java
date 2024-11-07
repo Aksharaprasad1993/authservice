@@ -1,10 +1,10 @@
-package com.example.authservice.user;
+package com.example.project;
 
 public  final class UserAuthenticationConstants {
 	
 	public static final String GET_USERS = "/users";
 	public static final String LOOK_UP_USER = "/lookUpUser";
-	public static final String CREATE_USER = "/createUser";
+	public static final String CREATE_USER = "/insertUser";
 	public static final String VALIDATE_USER = "/validateUser";
 	public static final String UPDATE_PASSWORD = "/updatePassword";
 	public static final String DELETE_USER = "/deleteUser";

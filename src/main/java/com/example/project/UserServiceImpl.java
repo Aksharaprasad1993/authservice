@@ -1,48 +1,48 @@
-package com.example.authservice.user;
+package com.example.project;
 
-import java.util.List;
-
-import javax.validation.Valid;
-
+import exception.InvalidDateException;
+import exception.InvalidPasswordException;
+import exception.UserAlreadyExistsException;
+import exception.UserNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import com.example.authservice.exception.InvalidDateException;
-import com.example.authservice.exception.InvalidPasswordException;
-import com.example.authservice.exception.UserAlreadyExistsException;
-import com.example.authservice.exception.UserNotFoundException;
+import javax.validation.Valid;
+import java.util.List;
+import java.util.stream.Collectors;
+
 
 @Service
-public class UserServiceImpl implements UserService {
+public class UserServiceImpl implements UserDetailsService {
 
 	@Autowired
-	private UserRepository userRepository;
+	private UserDetailsRepository userRepository;
 
 	SHA256Encryption sha256 = new SHA256Encryption();
 
-	public UserServiceImpl(UserRepository userRepository) {
+	public UserServiceImpl(UserDetailsRepository userRepository) {
 		this.userRepository = userRepository;
 	}
 
 	@Override
-	public List<User> retrieveAllUsers() {
-		List<User> users = userRepository.findAll();
+	public List<UserDetails> retrieveAllUsers() {
+		List<UserDetails> users = userRepository.findAll();
 		return users;
 	}
 
 	@Override
 	public List<ResponseUser> retrieveAllUsersWithoutPassword() {
-		List<User> allUsers = retrieveAllUsers();
-		List<ResponseUser> usersWithOutPassword = allUsers.stream().map(user -> userWithOutPassword(user)).toList();
+		List<UserDetails> allUsers = retrieveAllUsers();
+		List<ResponseUser> usersWithOutPassword = allUsers.stream().map(user -> userWithOutPassword(user)).collect(Collectors.toList());
 		return usersWithOutPassword;
 
 	}
 
 	@Override
-	public User findOne(String username) {
-		User existingUser = userRepository.findByUsername(username);
+	public UserDetails findOne(String username) {
+		UserDetails existingUser = userRepository.findByUsername(username);
 		if (null != existingUser && null != existingUser.getUsername() && !existingUser.getUsername().equals(" ")) {
 			return existingUser;
 		}
@@ -52,7 +52,7 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public ResponseUser findOneResponse(String username) {
 
-		User user = userRepository.findByUsername(username);
+		UserDetails user = userRepository.findByUsername(username);
 		ResponseUser response = new ResponseUser();
 		if (user != null) {
 			response = userWithOutPassword(user);
@@ -64,8 +64,8 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
-	public void saveValues(User user) throws Exception {
-		User existingRecord = findOne(user.getUsername());
+	public void saveValues(UserDetails user) throws Exception {
+		UserDetails existingRecord = findOne(user.getUsername());
 		String encodedPassword = null;
 		if (null == existingRecord) {
 			if (null == user.getDob()) {
@@ -85,8 +85,8 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
-	public ResponseEntity<String> validateUser(User user) throws Exception {
-		User existingRecord = findOne(user.getUsername());
+	public ResponseEntity<String> validateUser(UserDetails user) throws Exception {
+		UserDetails existingRecord = findOne(user.getUsername());
 		String encodePassword = sha256.encrypt(user.getPassword());
 		if (existingRecord == null) {
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(UserAuthenticationConstants.INVALID_USERNAME);
@@ -100,7 +100,7 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
-	public ResponseUser userWithOutPassword(User user) {
+	public ResponseUser userWithOutPassword(UserDetails user) {
 		ResponseUser userWithOutPassword = new ResponseUser();
 		userWithOutPassword.setUsername(user.getUsername());
 		userWithOutPassword.setName(user.getName());
@@ -111,8 +111,8 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
-	public User findByUsername(String userName) {
-		User existingUser = userRepository.findByUsername(userName);
+	public UserDetails findByUsername(String userName) {
+		UserDetails existingUser = userRepository.findByUsername(userName);
 		return existingUser;
 	}
 
@@ -128,7 +128,7 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public ResponseEntity<String> updatePassword(RequestUser requestUser) {
 
-		User existingRecord = findOne(requestUser.getUsername());
+		UserDetails existingRecord = findOne(requestUser.getUsername());
 		if (null != existingRecord) {
 			String encodedPassword = null;
 			encodedPassword = sha256.encrypt(requestUser.getOldPassword());
@@ -153,8 +153,8 @@ public class UserServiceImpl implements UserService {
 
 
 	@Override
-	public ResponseEntity<String> deleteUser(@Valid User user) {
-		User existingRecord = findOne(user.getUsername());
+	public ResponseEntity<String> deleteUser(@Valid UserDetails user) {
+		UserDetails existingRecord = findOne(user.getUsername());
 		if (null != existingRecord) {
 			String encodedPassword = null;
 			encodedPassword = sha256.encrypt(user.getPassword());

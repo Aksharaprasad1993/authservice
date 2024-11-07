@@ -1,2 +1,2 @@
-# authservice
-Demo for authservice
+# sample
+Demo for sample

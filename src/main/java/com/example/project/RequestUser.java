@@ -1,4 +1,4 @@
-package com.example.authservice.user;
+package com.example.project;
 
 
 

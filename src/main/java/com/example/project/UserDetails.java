@@ -1,29 +1,36 @@
-package com.example.authservice.user;
+package com.example.project;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeParseException;
-
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "userdetails")
-public class User {
+public class UserDetails {
 
 	@Id
+	@Column(name="username")
 	private String username;
 
+	@Column(name="name")
 	private String name;
+
+	@Column(name="lastname")
 	private String lastname;
+
+	@Column(name="password")
 	private String password;
+
+	@Column(name="dob")
 	private String dob;
 
-	public User() {
+	public UserDetails() {
 
 	}
 
-	public User(String name, String lastname, String username, String password, String dob) {
+	public UserDetails(String name, String lastname, String username, String password, String dob) {
 		super();
 
 		this.name = name;
